@@ -12,12 +12,12 @@ class Window(QWidget):
         super(Window, self).__init__()
 
         self.setWindowTitle("QTInkle01")
-        self.setGeometry(300,300,300,300)
+        self.setGeometry(300,300,600,600)
         self.setMinimumHeight(100)
         self.setMinimumWidth(250)
-        self.setMaximumHeight(300)
-        self.setMaximumWidth((400))
-        self.setIcon() # todo sort out whether is works on Mac and why not on Cinnamon
+        self.setMaximumHeight(600)
+        self.setMaximumWidth((800))
+        self.setIcon() # todo sort out whether is works on Mac
 
     def setIcon(self):
         appIcon = QIcon("/home/brian/.local/share/icons/hicolor/16x16/apps/97C1_wordpad.0.png")

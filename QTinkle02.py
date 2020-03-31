@@ -11,7 +11,15 @@ import sys
 class MyButton(QPushButton):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.resize(60,20)
+
+        self.resize(60,30)
+        self.setStyleSheet(""" MyButton {                      
+                            border - style: outset;
+                            border - width: 50 px;
+                            border - radius: 2000px;
+                            border - color: white;
+                            padding: 4 px;
+                            }""")
 
 
     def setinitcolour(self,x,y):
@@ -22,7 +30,11 @@ class MyButton(QPushButton):
         self.setcolour(s)
 
     def setcolour(self,col):
-        self.setStyleSheet("background-color:" + col)
+        s="background-color:" + col+";"
+        s=""
+
+        #self.setStyleSheet('MyButton {background-color: #A3C1DA}')
+#        self.setStyleSheet("background-color:" + col)
 
     def setpos(self,x,y):
         # if y % 2:
@@ -61,6 +73,7 @@ class Window(QWidget):
         self.setMaximumWidth((800))
         self.setIcon() # todo sort out whether is works on Mac
         self.BtnArray()
+
         #self.bnta=BtnArray()
 
 

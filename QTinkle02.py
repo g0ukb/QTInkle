@@ -12,7 +12,7 @@ class MyButton(QPushButton):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.resize(60,30)
+        self.resize(30,10)
         self.setStyleSheet(""" MyButton {                      
                             border - style: outset;
                             border - width: 50 px;
@@ -20,7 +20,6 @@ class MyButton(QPushButton):
                             border - color: white;
                             padding: 4 px;
                             }""")
-
 
     def setinitcolour(self,x,y):
         if (x+y) % 2:
@@ -31,10 +30,7 @@ class MyButton(QPushButton):
 
     def setcolour(self,col):
         s="background-color:" + col+";"
-        s=""
-
-        #self.setStyleSheet('MyButton {background-color: #A3C1DA}')
-#        self.setStyleSheet("background-color:" + col)
+        self.setStyleSheet(s)
 
     def setpos(self,x,y):
         # if y % 2:
@@ -42,23 +38,7 @@ class MyButton(QPushButton):
         # else:
         #
         offset = 25
-        self.move(offset + 50 * x, 50 + 20 * y)
-
-# class BtnArray():
-#     def __init__(self):
-#         self.btns=[]
-#         self.addBtn()
-#
-#     def addBtn(self):
-#         btn=MyButton(self)
-#         btn.setpos(x,y)
-#         btn.setinitcolour(x)
-#         idx=x*5+y
-#         self.btns.append(btn)
-
-
-
-
+        self.move(offset + 30 * x, 50 + 10 * y)
 
 
 class Window(QWidget):
@@ -66,37 +46,36 @@ class Window(QWidget):
         super(Window, self).__init__()
 
         self.setWindowTitle("QTInkle01")
-        self.setGeometry(300,300,600,600)
+        self.setGeometry(300,300,1200,600)
         self.setMinimumHeight(100)
         self.setMinimumWidth(250)
         self.setMaximumHeight(600)
-        self.setMaximumWidth((800))
+        self.setMaximumWidth((1200))
         self.setIcon() # todo sort out whether is works on Mac
-        self.BtnArray()
-
-        #self.bnta=BtnArray()
-
+        self.display_band()
 
     def setIcon(self):
         appIcon = QIcon("/home/brian/.local/share/icons/hicolor/16x16/apps/97C1_wordpad.0.png")
         self.setWindowIcon(appIcon)
 
+    def _pick_row(self):
+        self.picks = []
+        for y in range(10):
+            self.picks.append(MyButton(self))
+        return self.picks
 
-    def BtnArray(self):
-        self.btn = []
-        for x in range(10):
-           for y in range(5):
-             idx=x*5+y
+    def display_band(self):
+        self.band = []
+        for x in range(30):
+            pick_row=self._pick_row()
+            for y in range(len(pick_row)):
+                pick_row[y].setpos(x,y)
+                pick_row[y].setinitcolour(x, y)
+                pick_row[y].clicked.connect(lambda checked=pick_row[y].isChecked(), i=x, j=y: self.btnclick(i,j))
+            self.band.append(pick_row)
 
-             self.btn.append(MyButton(self))
-             #self.btn[idx].
-             self.btn[idx].setpos(x,y)
-             self.btn[idx].setinitcolour(x,y)
-             self.btn[idx].clicked.connect(lambda checked=self.btn[idx].isChecked(), i=idx : self.btnclick( i) )
-
-    def btnclick(self,i):
-        print(i)
-        self.btn[i].setcolour("blue")
+    def btnclick(self,i,j):
+        self.band[i][j].setcolour("blue")
 
 
 myApp = QApplication(sys.argv)

@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'brian'
 
+from PySide2.QtWidgets import QApplication, QWidget, QPushButton, QFrame, QGridLayout, QColorDialog,QLabel, QHBoxLayout
 
-from PySide2.QtWidgets import QApplication, QWidget, QPushButton
+
 from PySide2.QtGui import QIcon
+from PySide2.QtCore import QRect
 import sys
-
 
 class Pick(QPushButton):
     def __init__(self, *args, **kwargs):
@@ -26,9 +27,8 @@ class Pick(QPushButton):
         self.setStyleSheet(s)
 
     def setpos(self, x, y):
-        offset = 25
+        offset = 40
         self.move(offset + 31 * x, 50 + 11 * y)
-
 
 class BandRow():
     def __init__(self, parent, start_heddled, heddled_colour, unheddled_colour, pick_ct, warp_row=0):
@@ -57,26 +57,59 @@ class Band():
             start_heddled = y % 2
             self.warps.append(BandRow(parent, start_heddled, heddled_colour, unheddled_colour, pick_ct, y))
 
-
 class Window(QWidget):
     def __init__(self):
         super(Window, self).__init__()
 
-        self.setWindowTitle("QTInkle01")
-        self.setGeometry(300, 300, 1200, 600)
+        self.setWindowTitle("QTInkle04")
+        self.setGeometry(300, 300, 1200, 700)
         self.setMinimumHeight(100)
         self.setMinimumWidth(250)
-        self.setMaximumHeight(600)
+        self.setMaximumHeight(700)
         self.setMaximumWidth((1200))
-        self.setIcon()  # todo sort out whether is works on Mac
-        self.create_band(30, 20)
+        self.setframes()
+        self.create_band(36, 20)
 
-    def setIcon(self):
-        appIcon = QIcon("/home/brian/.local/share/icons/hicolor/16x16/apps/97C1_wordpad.0.png")
-        self.setWindowIcon(appIcon)
+
+
+
+
+    def setframes(self):
+        #self.yarn_frame = QGroupBox("Grid")
+        self.yarn_frame =QFrame(self)
+        self.yarn_frame.setFrameShape(QFrame.StyledPanel)
+        self.yarn_frame.setGeometry(0, 0, 200, 200)
+        self.createGridLayout()
+        self.yarn_frame.setLayout(self.titlelayout)
+              #frame.setLineWidth(0.6)
+        self.loom_frame =QFrame(self)
+        self.loom_frame.setFrameShape(QFrame.StyledPanel)
+        self.loom_frame.setGeometry(200, 0, 1000, 200)
+        self.weave_frame =QFrame(self)
+        self.weave_frame.setFrameShape(QFrame.StyledPanel)
+        self.weave_frame.setGeometry(0, 200, 1200, 500)
+
+    def createGridLayout(self):
+        #self.horizontalGroupBox = QGroupBox("Grid")
+        self.titlelayout=QHBoxLayout()
+        self.titlelayout.addWidget(QLabel("Yarns123456"))
+
+        self.layout = QGridLayout()
+        self.titlelayout.addWidget(self.layout)
+        self.layout.addWidget(QLabel("Yarns123456"))
+        self.layout.setColumnStretch(1, 4)
+        self.layout.setColumnStretch(2, 4)
+        self.layout.setColumnStretch(3, 4)
+        self.create_yarns()
+        for i in range(12):
+            self.layout.addWidget(self.yarns[i])
+            self.yarns[i].clicked.connect(
+                lambda checked=self.yarns[i].isChecked(), x=i: self.yarn_colour(x))
+        self.layout.addWidget(QLabel("Current"))
+        #self.yarn_frame.setLayout(self.layout)
 
     def create_band(self, x, y):
-        self.band = Band(self, "red", "yellow", x, y)
+        self.band = Band(self.weave_frame, "red", "yellow", x, y)
         for y in range(self.band.warp_ct):
             for x in range(self.band.pick_ct):
                 self.band.warps[y].picks[x].clicked.connect(
@@ -88,6 +121,24 @@ class Window(QWidget):
         ucol = self.band.warps[j].unheddled_colour
         pickcol = ucol if pick.colour == hcol else hcol
         pick.setcolour(pickcol)
+
+
+    def create_yarns(self):
+        self.yarns=[]
+        for i in range(12):
+            btn=QPushButton()
+            self.yarns.append(btn)
+
+
+    def yarn_colour(self,i):
+        col=QColorDialog.getColor()
+        s = "background-color:" + col.name()
+        self.yarns[i].setStyleSheet(s)
+
+
+
+
+
 
 
 myApp = QApplication(sys.argv)

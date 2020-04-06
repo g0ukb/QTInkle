@@ -21,34 +21,44 @@ class Yarn(QPushButton):
                             padding: 4 px;
                             }""")
         self.colour = None
+        self.colour_index=None
 
     def setColour(self, col):
         self.colour = col
-        s = "background-color:" + col + ";"
-        self.setStyleSheet(s)
+        try:
+            s = "background-color:" + col + ";"
+            self.setStyleSheet(s)
+        except TypeError:
+            pass
 
     def getColour(self):
         return self.colour
 
 
-class SingleLoomWarp(Yarn):
+class SingleWarp(Yarn):
     def __init__(self, parent, warp_no):
         Yarn.__init__(self, parent)
         self.warp_number = warp_no
         self.isHeddled = not bool(warp_no % 2)
 
 
-class SingleBandWarp(SingleLoomWarp):
+class SinglePick(SingleWarp):
     def __init__(self, parent, warp_no):
-        SingleLoomWarp.__init__(self, parent, warp_no)
+        SingleWarp.__init__(self, parent, warp_no)
         self.alt_colour = None
         self.isPicked = False
+        self.pick_number=0
 
-    def set_AltColour(self, col):
+    def setAltColour(self, col):
         self.alt_colour = col
+
+    def getAltColour(self):
+        return self.alt_colour
 
     def doPickup(self):
         self.colour, self.alt_colour = self.alt_colour, self.colour
+        self.setColour(self.colour)
+        self.setAltColour(self.alt_colour)
         self.isPicked = not self.isPicked
 
 
@@ -57,26 +67,50 @@ class Loom():
         self.warps = []
         self.band = []
         self.warp_ct = 0
-        self.max_warps = 96
-        self.max_picks = 19
+        self.max_warps = 80
+        self.max_picks = 20
         for i in range(warp_ct):
-            self.add_warp_thread(loom)
-            self.add_band_thread(band)
+            self.add_new_warp(loom, band)
 
-    def add_warp_thread(self, parent):
-        x_offset = 25
-
-        y_offset = 80
-        if self.warp_ct < self.max_warps:
-            warp_no = self.warp_ct
-            new_warp_thread = SingleLoomWarp(parent, warp_no)
-            new_warp_thread.resize(10, 30)
-            y = y_offset if new_warp_thread.isHeddled else y_offset + 30
-            new_warp_thread.move(x_offset + warp_no * 10, y)
-            new_warp_thread.show()
-            self.warps.append(new_warp_thread)
+    def add_new_warp(self, loom, band):
+        warp_no = self.warp_ct
+        if warp_no < self.max_warps:
+            loom_warp = self.add_warp_thread(loom, warp_no)
+            band_warp = self.add_band_thread(band, warp_no)
             self.warp_ct += 1
-            return new_warp_thread
+            return loom_warp, band_warp
+        else:
+            return None, None
+
+    def add_warp_thread(self, parent, warp_no):
+        x_offset = 100
+        y_offset = 80
+        new_warp_thread = SingleWarp(parent, warp_no)
+        new_warp_thread.resize(10, 30)
+        y = y_offset if new_warp_thread.isHeddled else y_offset + 30
+        new_warp_thread.move(x_offset + warp_no * 10, y)
+        new_warp_thread.show()
+        self.warps.append(new_warp_thread)
+        return new_warp_thread
+
+    def add_band_thread(self, parent, warp_no):
+        x_offset = 20
+        y_offset = 50
+        band_row = []
+        pick_no=0
+        for pick in range(self.max_picks):
+            new_pick = SinglePick(parent, warp_no)
+            new_pick.pick_number=pick_no
+            new_pick.isHeddled = not bool(warp_no % 2)
+            new_pick.resize(29, 11)
+            x = x_offset if new_pick.isHeddled else x_offset + 29
+            y = y_offset if new_pick.isHeddled else y_offset + 5
+            new_pick.move(x + 58 * pick, y + 11 * (warp_no // 2))
+            new_pick.show()
+            band_row.append(new_pick)
+            pick_no+=1
+        self.band.append(band_row)
+        return band_row
 
     def remove_warp_thread(self):
         if self.warp_ct > 0:
@@ -88,23 +122,6 @@ class Loom():
                 pick.setParent(None)
                 pick.deleteLater()
             del self.band[-1]
-
-    def add_band_thread(self, parent):
-        x_offset = 15
-        y_offset = 50
-        band_row = []
-        if self.warp_ct < self.max_warps:
-            for pick in range(self.max_picks):
-                new_pick = SingleBandWarp(parent, self.warp_ct)
-                new_pick.isHeddled = bool((self.warp_ct + pick) % 2)
-                new_pick.resize(30, 10)
-                x = x_offset if self.warps[self.warp_ct - 1].isHeddled else x_offset + 30
-                y = y_offset if self.warps[self.warp_ct - 1].isHeddled else y_offset + 5
-                new_pick.move(x + 60 * pick, y + 11 * ((self.warp_ct - 1) // 2))
-                new_pick.show()
-                band_row.append(new_pick)
-            self.band.append(band_row)
-        return band_row
 
 
 class Window(QWidget):
@@ -121,6 +138,10 @@ class Window(QWidget):
         self.loom = Loom(self.loom_frame, self.band_frame, 6)
         for warp in self.loom.warps:
             warp.clicked.connect(lambda checked=warp.isChecked(), i=warp.warp_number: self.colour_warp_thread(i))
+        for band_row in self.loom.band:
+            for pick in band_row:
+                pick.clicked.connect(
+                    lambda checked=pick.isChecked(), i=pick.warp_number, j=pick.pick_number: self.pickup(i, j))
 
     def create_yarn_frame(self):
         yarn_frame = QFrame(self)
@@ -138,6 +159,7 @@ class Window(QWidget):
         self.create_yarns()
         for i in range(12):
             yarngrid.addWidget(self.yarns[i])
+            self.yarns[i].colour_index=i
         yarnbox.addLayout(yarngrid)
         lockbox = QHBoxLayout()
         self.yarnlock = QCheckBox("Lock Colours")
@@ -145,8 +167,10 @@ class Window(QWidget):
         yarnbox.addLayout(lockbox)
         curbox = QHBoxLayout()
         curbox.addWidget(QLabel("Current"))
-        self.curbutton = Yarn()
-        curbox.addWidget(self.curbutton)
+        self.current_yarn_colour = Yarn()
+        self.current_yarn_colour.clicked.connect(lambda: self.get_next_colour())
+        self.current_yarn_colour.clicked.connect(lambda: self.debug())
+        curbox.addWidget(self.current_yarn_colour)
         curbox.insertSpacing(40, 40)
         yarnbox.addLayout(curbox)
         yarn_frame.setLayout(yarnbox)
@@ -185,15 +209,18 @@ class Window(QWidget):
             self.yarns[i].clicked.connect(
                 lambda checked=self.yarns[i].isChecked(), x=i: self.yarn_colour(x))
 
-    def yarn_colour(self, i):
-        yarn = self.yarns[i]
+    def yarn_colour(self, yarn_no):
+        yarn = self.yarns[yarn_no]
         if not self.yarnlock.isChecked():
             old_col = yarn.getColour()
-            col = QColorDialog.getColor().name()
-            yarn.setColour(col)
-            if old_col:
-                self.change_warp_colour(old_col, col)
-        self.curbutton.setColour(yarn.getColour())
+            get_col = QColorDialog.getColor()
+            if get_col.isValid():
+                new_col=get_col.name()
+                yarn.setColour(new_col)
+                if old_col:
+                    self.change_warp_colour(old_col, new_col)
+        self.current_yarn_colour.setColour(yarn.getColour())
+        self.current_yarn_colour.colour_index=yarn.colour_index
 
     def change_warp_colour(self, old_col, new_col):
         for warp in self.loom.warps:
@@ -203,23 +230,74 @@ class Window(QWidget):
                 for pick in row:
                     if pick.getColour() == old_col:
                         pick.setColour(new_col)
+                    if pick.getAltColour() == old_col:
+                        pick.setAltColour(new_col)
 
     def add_warp_thread(self):
-        warp = self.loom.add_warp_thread(self.loom_frame)
-        warp.clicked.connect(lambda: self.colour_warp_thread(warp.warp_number))
-        band_warp = self.loom.add_band_thread(self.band_frame)
-        for i, pick in enumerate(band_warp):
-            pick.clicked.connect(lambda: self.colour_pick(warp.warp_number, i))
+        try:
+            loom_warp, band_warp = self.loom.add_new_warp(self.loom_frame, self.band_frame)
+            loom_warp.clicked.connect(lambda: self.colour_warp_thread(loom_warp.warp_number))
+            for pick in band_warp:
+                pick.clicked.connect(
+                    lambda checked=pick.isChecked(), i=pick.warp_number, j=pick.pick_number: self.pickup(i, j))
+        except AttributeError:
+            pass
 
     def remove_warp_thread(self):
         self.loom.remove_warp_thread()
 
     def colour_warp_thread(self, warp):
         this_warp = self.loom.warps[warp]
-        this_warp.setColour(self.curbutton.getColour())
-        for pick in self.loom.band[warp]:
-            pick.setColour(self.curbutton.getColour())
+        col=self.current_yarn_colour.getColour()
+        this_warp.setColour(col)
+        try:
+            prev_warp=self.loom.warps[warp-1]
+            prev_colour=prev_warp.getColour()
+        except IndexError:
+            prev_colour=None
+        try:
+            next_warp=self.loom.warps[warp+1]
+            next_colour=next_warp.getColour()
+        except IndexError:
+            next_colour=None
 
+        for pick in self.loom.band[warp]:
+            pick.setColour(col)
+        try:
+            if pick.isHeddled:
+                for next_pick in self.loom.band[warp+1]:
+                    next_pick.setAltColour(col)
+                    pick.setAltColour(next_colour)
+            else:
+                for prev_pick in self.loom.band[warp-1]:
+                    prev_pick.setAltColour(col)
+                    pick.setAltColour(prev_colour)
+
+        except IndexError:
+            pass
+
+    def get_next_colour(self):
+        try:
+            next_index_start=self.current_yarn_colour.colour_index+1
+            for i in range(12):
+                next_index= (next_index_start + i) % 12
+                next_colour=self.yarns[next_index].getColour()
+                if next_colour:
+                    self.current_yarn_colour.setColour(next_colour)
+                    self.current_yarn_colour.colour_index=next_index
+                    break
+        except TypeError:
+            pass
+
+
+    def pickup(self,warp_no,pick_no):
+        if self.loom.band[warp_no][pick_no].getAltColour():
+            self.loom.band[warp_no][pick_no].doPickup()
+
+    def debug(self):
+        for i in self.loom.band:
+            for j in i:
+                print(j.getColour(),j.getAltColour(), j.isHeddled)
 
 if __name__ == '__main__':
     myApp = QApplication(sys.argv)

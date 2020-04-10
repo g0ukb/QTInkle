@@ -1,65 +1,64 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-__author__ = 'brian'
-
-from PySide2.QtWidgets import QApplication, QWidget,QPushButton
-from PySide2.QtGui import QIcon
 import sys
+from PySide2 import QtCore, QtWidgets
+from PySide2.QtWidgets import QMainWindow, QWidget, QPushButton, QAction
+from PySide2.QtCore import QSize
+from PySide2.QtGui import QIcon
 
-
-
-
-
-class Window(QWidget):
+class MainWindow(QMainWindow):
     def __init__(self):
-        super(Window, self).__init__()
+        QMainWindow.__init__(self)
 
-        self.setWindowTitle("QTInkle01")
-        self.setGeometry(300,300,600,600)
-        self.setMinimumHeight(100)
-        self.setMinimumWidth(250)
-        self.setMaximumHeight(600)
-        self.setMaximumWidth((800))
-        self.setIcon() # todo sort out whether is works on Mac
-        self.BtnArray()
+        # self.setMinimumSize(QSize(300, 100))
+        # self.setWindowTitle("PyQt menu example - pythonprogramminglanguage.com")
+        #
+        # # Add button widget
+        # pybutton = QPushButton('Pyqt', self)
+        # pybutton.clicked.connect(self.clickMethod)
+        # pybutton.resize(100,32)
+        # pybutton.move(130, 30)
+        # pybutton.setToolTip('This is a tooltip message.')
+        #
+        # # Create new action
+        # newAction = QAction(QIcon('new.png'), '&New', self)
+        # newAction.setShortcut('Ctrl+N')
+        # newAction.setStatusTip('New document')
+        # newAction.triggered.connect(self.newCall)
+        #
+        # # Create new action
+        # openAction = QAction(QIcon('open.png'), '&Open', self)
+        # openAction.setShortcut('Ctrl+O')
+        # openAction.setStatusTip('Open document')
+        # openAction.triggered.connect(self.openCall)
+        #
+        # # Create exit action
+        # exitAction = QAction(QIcon('exit.png'), '&Exit', self)
+        # exitAction.setShortcut('Ctrl+Q')
+        # exitAction.setStatusTip('Exit application')
+        # exitAction.triggered.connect(self.exitCall)
 
+        # Create menu bar and add action
+        menuBar = self.menuBar()
+        fileMenu = menuBar.addMenu('&File')
+        # fileMenu.addAction(newAction)
+        # fileMenu.addAction(openAction)
+        # fileMenu.addAction(exitAction)
 
-    def setIcon(self):
-        appIcon = QIcon("/home/brian/.local/share/icons/hicolor/16x16/apps/97C1_wordpad.0.png")
-        self.setWindowIcon(appIcon)
+    def openCall(self):
+        print('Open')
 
+    def newCall(self):
+        print('New')
 
-    # def BtnArray(self):
-    #     self.btn = []
-    #     for x in range(10):
-    #         for y in range(5):
-    #           self.btn.append(self.InkleBtn(x,y))
+    def exitCall(self):
+        print('Exit app')
 
-    def BtnArray(self):
-        def setcol(col):
-            s="background-color:" + col
-            return self.setStyleSheet(s)
+    def clickMethod(self):
+        print('PyQt')
 
-        self.btn = []
-        for x in range(10):
-           for y in range(5):
-             self.btn.append(QPushButton(self))
-             if y%2:
-                 offset=25
-             else:
-                 offset=50
-             self.btn[x*5+y].resize(60,20)
-             self.btn[x*5+y].move(offset+50*x,50+20*y)
-             if x%2:
-                 s="red"
-             else:
-                 s="yellow"
-             self.btn[x * 5 + y].setcol(s)
-
-
-myApp = QApplication(sys.argv)
-window = Window()
-window.show()
-
-myApp.exec_()
-sys.exit(0)
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    mainWin = MainWindow()
+    mainWin.show()
+    sys.exit( app.exec_())

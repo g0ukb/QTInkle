@@ -79,8 +79,8 @@ class YarnPalette():
             if dialog_col.isValid():
                 new_col = dialog_col.name()
                 yarn.setColour(new_col)
-        self.yarns[self.current_yarn_index].clear_colour_marker()
-        yarn.set_colour_marker()
+        self.yarns[self.current_yarn_index].clear_current_marker()
+        yarn.set_current_marker()
         self.current_yarn_index = yarn_index
         self.is_modified = True
 
@@ -149,7 +149,7 @@ class Loom():
             warp_thread.setParent(None)
             if not warp_thread.isHeddled:
                 alt_heddled_thread = self.warp_threads[self.warp_thread_ct - 1]
-                alt_heddled_thread.alt_warp_thread = None
+                alt_heddled_thread.pickup_yarn_index = None
                 for pick in alt_heddled_thread.picks:
                     pick.set_display_colour(alt_heddled_thread, None)
             # warp.deleteLater()
@@ -161,9 +161,9 @@ class Loom():
         for warp_thread in self.warp_threads:
             alt_warp_thread_index = warp_thread.index + 1 if warp_thread.isHeddled else warp_thread.index - 1
             try:
-                warp_thread.alt_warp_thread = self.warp_threads[alt_warp_thread_index]
+                warp_thread.pickup_yarn_index = self.warp_threads[alt_warp_thread_index]
             except IndexError:
-                warp_thread.alt_warp_thread = None
+                warp_thread.pickup_yarn_index = None
 
     def reload(self, load_data, yarns):
         self.set_alt_warp_threads()
